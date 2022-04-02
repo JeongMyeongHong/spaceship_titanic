@@ -1,9 +1,12 @@
+import pandas as pd
+
 from spaceship.models import SpaceshipModel
 from spaceship.templates import SpaceTemplates
 
 if __name__ == '__main__':
     def print_menu():
         return '1.템플릿 2.모델'
+
 
     while 1:
         menu = input(print_menu())

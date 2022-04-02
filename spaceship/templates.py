@@ -22,7 +22,8 @@ class SpaceTemplates:
         # ic(f'{self.file_name.split(".")[0]}의 상위 5행 : {this.head()}')
         # self.cTP_HomePlanet(this)
         # self.cTP_Cryosleep(this)
-        self.cTP_Cabin(this) # 캐빈만 분석하면 됨.
+        self.split_info_from_Cabin(this)
+        # self.cTP_Cabin(this) # 캐빈만 분석하면 됨.
         # self.cTP_Destination(this)
         # self.cTP_Age(this)
         # self.cTP_Vip(this)
@@ -58,8 +59,8 @@ class SpaceTemplates:
         캡슐에서 수면 취하는 것
         냉동수면? 같은 느낌
         수면 여부   /   인원수 /   전송 확률
-        False  /   5439    /   32.89
         True   /   3037    /   81.76
+        False  /   5439    /   32.89
         Null    /   217     /   48.85
         """
         this['CryoSleep'].fillna('Null', inplace=True)
@@ -73,13 +74,14 @@ class SpaceTemplates:
     def split_info_from_Cabin(this):
         this['Title'] = this['Cabin'].str.split('/')
         this['Title'].fillna('Null', inplace=True)
-        print(this['Title'].values[0][0])
+        # print(this['Title'].head(20))
+        for i in this['Title']:
+            print(this['Title'][i])
         return this
 
     @staticmethod
     def cTP_Cabin(this) -> None:
         """
-        마지막에 다시 하자...
         The cabin number where the passenger is staying.
                 승객이 머물고 있는 캐빈 번호.
         Takes the form deck/num/side, where side can be either P for Port or S for Starboard
@@ -136,12 +138,12 @@ class SpaceTemplates:
     def cTP_Age(this):
         """
         연령  /  인원수   /   전송 확률
-        5    /  2501   /    47.42
-        6    /  2430   /    48.97
-        4    /  1784   /    45.96
-        3    /  780    /    56.15
         1    /  466    /    76.82
         2    /  299    /    59.20
+        3    /  780    /    56.15
+        4    /  1784   /    45.96
+        5    /  2501   /    47.42
+        6    /  2430   /    48.97
         7    /  254    /    46.85
         0    /  179    /    50.28
         """
@@ -160,9 +162,9 @@ class SpaceTemplates:
     def cTP_Vip(this):
         """
         VIP      /  인원수   /   전송 확률
-        False    /  2430   /    50.63
-        Null    /  1784   /    51.23
-        True    /  2501   /    38.19
+        False    /  8291   /    50.63
+        Null    /  203   /    51.23
+        True    /  199   /    38.19
         """
         this['VIP'].fillna('Null', inplace=True)
         print(this['VIP'].value_counts())
@@ -175,11 +177,11 @@ class SpaceTemplates:
     def cTP_RoomService(this):
         """
         RS_Cnt /  인원수   /   전송 확률
+        0      /  181    /    45.86
         1      /  5999   /    61.44
+        10     /  598    /    36.12
         100    /  1314   /    23.97
         1000   /  601    /    12.98
-        10     /  598    /    36.12
-        0      /  181    /    45.86
         """
         this['RoomService'].fillna(-0.5, inplace=True)
         bins = [-1, 0, 10, 100, 1000, np.inf]
@@ -196,11 +198,11 @@ class SpaceTemplates:
     def cTP_FoodCourt(this):
         """
         FC_Cnt /  인원수   /   전송 확률
+        0      /  183    /    54.10
         1      /  5892   /    56.33
+        10     /  576    /    21.53
         100    /  1178   /    31.49
         1000   /  864    /    53.82
-        10     /  576    /    21.53
-        0      /  183    /    54.10
         """
         this['FoodCourt'].fillna(-0.5, inplace=True)
         bins = [-1, 0, 10, 100, 1000, np.inf]
@@ -217,11 +219,11 @@ class SpaceTemplates:
     def cTP_ShoppingMall(this):
         """
         SM_Cnt /  인원수   /   전송 확률
-        1      /  6088   /    57.03
-        100    /  1307   /    32.75
-        10     /  708    /    20.48
-        1000   /  382    /    57.33
         0      /  208    /    54.81
+        1      /  6088   /    57.03
+        10     /  708    /    20.48
+        100    /  1307   /    32.75
+        1000   /  382    /    57.33
         """
         this['ShoppingMall'].fillna(-0.5, inplace=True)
         bins = [-1, 0, 10, 100, 1000, np.inf]
@@ -238,11 +240,11 @@ class SpaceTemplates:
     def cTP_Spa(this):
         """
         Spa_Cnt /  인원수   /   전송 확률
-        1      /  5850   /    61.81
-        100    /  1327   /    25.85
-        10     /  704    /    36.65
-        1000   /  629    /    11.13
         0      /  183    /    49.73
+        1      /  5850   /    61.81
+        10     /  704    /    36.65
+        100    /  1327   /    25.85
+        1000   /  629    /    11.13
         """
         this['Spa'].fillna(-0.5, inplace=True)
         bins = [-1, 0, 10, 100, 1000, np.inf]
@@ -259,11 +261,11 @@ class SpaceTemplates:
     def cTP_VRDeck(this):
         """
         VR_Cnt /  인원수   /   전송 확률
-        1      /  5974   /    60.83
-        100    /  1235   /    27.13
-        10     /  675    /    34.96
-        1000   /  621    /    12.08
         0      /  188    /    52.13
+        1      /  5974   /    60.83
+        10     /  675    /    34.96
+        100    /  1235   /    27.13
+        1000   /  621    /    12.08
         """
         this['VRDeck'].fillna(-0.5, inplace=True)
         bins = [-1, 0, 10, 100, 1000, np.inf]
