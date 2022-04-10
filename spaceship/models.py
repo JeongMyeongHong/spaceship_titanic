@@ -3,6 +3,10 @@ import pandas as pd
 from context.models import Model
 from icecream import ic
 
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+
 
 class SpaceshipModel:
     model = Model()
@@ -11,23 +15,29 @@ class SpaceshipModel:
         this = self.model.dataset
         this.train = self.model.load_dataset(train)
         this.test = self.model.load_dataset(test)
-        this.id = this.test['PassengerId']
+        this = self.give_id(this)
+        this.id = this.test['index']
         this.label = this.train['Transported']
-        self.drop_feature(this, 'Transported', 'Name')
-        self.homePlanet_nominal(this)
-        self.CryoSleep_nominal(this)
-        self.destination_nominal(this)
-        self.age_ratio(this)
-        self.vip_nominal(this)
-        self.roomService_ratio(this)
-        self.foodCourt_ratio(this)
-        self.shoppingMall_ratio(this)
-        self.spa_ratio(this)
-        self.vRDeck_ratio(this)
+        this.train.drop('Transported', axis=1, inplace=True)
+        this = self.drop_feature(this, 'Name', 'PassengerId', 'Cabin')
+        this = self.homePlanet_nominal(this)
+        this = self.CryoSleep_nominal(this)
+        this = self.destination_nominal(this)
+        this = self.age_ratio(this)
+        this = self.vip_nominal(this)
+        this = self.roomService_ratio(this)
+        this = self.foodCourt_ratio(this)
+        this = self.shoppingMall_ratio(this)
+        this = self.spa_ratio(this)
+        this = self.vRDeck_ratio(this)
+
+        return this
 
 
-        self.print_head(this.train, 60)
-        self.print_head(this.test, 20)
+    @staticmethod
+    def give_id(this):
+        [i.reset_index(inplace=True) for i in [this.train, this.test]]
+        return this
 
     @staticmethod
     def print_head(df, num=5):
@@ -46,7 +56,7 @@ class SpaceshipModel:
         return this
 
     @staticmethod
-    def homePlanet_nominal(this) -> None:
+    def homePlanet_nominal(this):
         """
         거주(출발) 행성   /   인원수 /   전송 확률
         Earth   /   4602    /   42.39
@@ -55,10 +65,11 @@ class SpaceshipModel:
         Null    /   201     /   51.24
         """
         map_homePlanet = {'Earth': 1, 'Europa': 2, 'Mars': 3, 'Null': 3}
-        return SpaceshipModel.make_nominal(this, 'HomePlanet', map_homePlanet)
+        SpaceshipModel.make_nominal(this, 'HomePlanet', map_homePlanet)
+        return this
 
     @staticmethod
-    def CryoSleep_nominal(this) -> None:
+    def CryoSleep_nominal(this):
         """
         캡슐에서 수면 취하는 것
         냉동수면? 같은 느낌
@@ -68,7 +79,8 @@ class SpaceshipModel:
         Null    /   217     /   48.85
         """
         map_cryosleep = {False: 0, True: 1, 'Null': 0}
-        return SpaceshipModel.make_nominal(this, 'CryoSleep', map_cryosleep)
+        SpaceshipModel.make_nominal(this, 'CryoSleep', map_cryosleep)
+        return this
 
     @staticmethod
     def split_info_from_Cabin(this):
@@ -80,7 +92,7 @@ class SpaceshipModel:
         return this
 
     @staticmethod
-    def cTP_Cabin(this) -> None:
+    def cTP_Cabin(this):
         """
         The cabin number where the passenger is staying.
                 승객이 머물고 있는 캐빈 번호.
@@ -115,6 +127,7 @@ class SpaceshipModel:
         this['Cabin'].fillna('Null', inplace=True)
         cnt_home = {True: 0, False: 0, 'Null': 0}
         [ic(j, 100 * i / j) for i, j in zip(list(cnt_home.values()), this['Cabin'].value_counts())]
+        return this
 
     @staticmethod
     def destination_nominal(this):
@@ -126,7 +139,8 @@ class SpaceshipModel:
         Null           /   182     /   50.55
         """
         map_destination = {'TRAPPIST-1e': 1, '55 Cancri e': 2, 'PSO J318.5-22': 3, 'Null': 3}
-        return SpaceshipModel.make_nominal(this, 'Destination', map_destination)
+        SpaceshipModel.make_nominal(this, 'Destination', map_destination)
+        return this
 
     @staticmethod
     def age_ratio(this):
@@ -158,7 +172,8 @@ class SpaceshipModel:
         Null    /  203   /    51.23
         """
         map_vip = {True: 1, False: 2, 'Null': 2}
-        return SpaceshipModel.make_nominal(this, 'VIP', map_vip)
+        SpaceshipModel.make_nominal(this, 'VIP', map_vip)
+        return this
 
     @staticmethod
     def roomService_ratio(this):
@@ -249,3 +264,26 @@ class SpaceshipModel:
             these[title].fillna(-0.5, inplace=True)
             these[title] = pd.cut(these[title], bins=bins, right=False, labels=labels)
         return this
+
+    @staticmethod
+    def create_k_fold() -> object:
+        return KFold(n_splits=10, shuffle=True, random_state=0)
+
+    @staticmethod
+    def get_accuracy(this, k_fold):
+        score = cross_val_score(RandomForestClassifier(), this.train, this.label,
+                                cv=k_fold, n_jobs=1, scoring='accuracy')
+        return round(np.mean(score) * 100, 2)
+
+    def learning(self, train, test):
+        this = self.preprocess(train, test)
+        k_fold = self.create_k_fold()
+        ic(f'사이킷런 알고리즘 정확도: {self.get_accuracy(this, k_fold)}')
+        # self.submit(this)
+
+    @staticmethod
+    def submit(this):
+        clf = RandomForestClassifier()
+        clf.fit(this.train, this.label)
+        prediction = clf.predict(this.test)
+        pd.DataFrame({'index': this.id, 'Transported': prediction}).to_csv('./save/submission.csv', index=False)

@@ -5,7 +5,7 @@ from spaceship.templates import SpaceTemplates
 
 if __name__ == '__main__':
     def print_menu():
-        return '1.템플릿 2.모델'
+        return '1.템플릿 2.모델 3. 러닝'
 
 
     while 1:
@@ -18,5 +18,9 @@ if __name__ == '__main__':
             print(' #### 2. 모델 #### ')
             model = SpaceshipModel()
             model.preprocess(train='train.csv', test='test.csv')
-        else:
-            break
+
+        elif menu == '3':
+            print(' #### 3. 러닝 #### ')
+            model = SpaceshipModel()
+            model.learning(train='train.csv', test='test.csv')
+        break
